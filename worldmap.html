@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Map Country Highlight</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        #map {
+            margin-top: 20px;
+        }
+        path {
+            stroke: #333;
+            stroke-width: 0.5px;
+            fill: #ccc;
+            cursor: pointer;
+        }
+        path.highlighted {
+            fill: orange;
+        }
+    </style>
+</head>
+<body>
+    <h1>World Map Country Highlight</h1>
+    <input type="text" id="country-input" placeholder="Enter a country name">
+    <button onclick="highlightCountry()">Highlight Country</button>
+
+    <div id="map"></div>
+
+    <script>
+        const width = 960;
+        const height = 500;
+
+        const svg = d3.select("#map")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        const projection = d3.geoMercator()
+            .scale(150)
+            .translate([width / 2, height / 1.5]);
+
+        const path = d3.geoPath().projection(projection);
+
+        let countryData;
+
+        // Load the world map GeoJSON data
+        d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function(data) {
+            countryData = data.features;
+
+            svg.append("g")
+                .selectAll("path")
+                .data(countryData)
+                .enter()
+                .append("path")
+                .attr("d", path)
+                .attr("id", d => d.properties.name.replace(/\s+/g, ''))
+                .on("click", function(event, d) {
+                    d3.selectAll("path").classed("highlighted", false);
+                    d3.select(this).classed("highlighted", true);
+                });
+        });
+
+        function highlightCountry() {
+            const countryName = document.getElementById("country-input").value.trim().toLowerCase();
+            const country = countryData.find(d => d.properties.name.toLowerCase() === countryName);
+
+            d3.selectAll("path").classed("highlighted", false);
+
+            if (country) {
+                d3.select(`#${country.properties.name.replace(/\s+/g, '')}`).classed("highlighted", true);
+            } else {
+                alert("Country not found or invalid name!");
+            }
+        }
+    </script>
+</body>
+</html>
